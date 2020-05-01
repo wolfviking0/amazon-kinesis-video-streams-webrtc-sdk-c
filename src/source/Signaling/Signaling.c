@@ -48,6 +48,8 @@ STATUS createSignalingSync(PSignalingClientInfoInternal pClientInfo, PChannelInf
                                  pChannelInfo->messageTtl,
                                  pChannelInfo->tagCount,
                                  pChannelInfo->pTags,
+                                 pChannelInfo->channelEndpointHttps,
+                                 pChannelInfo->channelEndpointWss,
                                  &pSignalingClient->pChannelInfo));
     CHK_STATUS(validateSignalingCallbacks(pSignalingClient, pCallbacks));
     CHK_STATUS(validateSignalingClientInfo(pSignalingClient, pClientInfo));

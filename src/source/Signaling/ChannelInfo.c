@@ -18,13 +18,15 @@ STATUS createChannelInfo(PCHAR pChannelName,
                          UINT64 messageTtl,
                          UINT32 tagCount,
                          PTag pTags,
+                         PCHAR channelEndpointHttps,
+                         PCHAR channelEndpointWss,
                          PChannelInfo* ppChannelInfo)
 {
     ENTERS();
     STATUS retStatus = STATUS_SUCCESS;
 
     UINT32 allocSize, nameLen = 0, arnLen = 0, regionLen = 0, cplLen = 0, certLen = 0, postfixLen = 0,
-            agentLen = 0, userAgentLen = 0, kmsLen = 0, tagsSize;
+            agentLen = 0, userAgentLen = 0, kmsLen = 0, tagsSize, wssEndpointLen = 0, httpEndpointLen = 0;
     PCHAR pCurPtr, pRegionPtr;
     PChannelInfo pChannelInfo = NULL;
 
@@ -89,6 +91,14 @@ STATUS createChannelInfo(PCHAR pChannelName,
         CHK(messageTtl >= MIN_SIGNALING_MESSAGE_TTL_VALUE && messageTtl <= MAX_SIGNALING_MESSAGE_TTL_VALUE, STATUS_SIGNALING_INVALID_MESSAGE_TTL_VALUE);
     }
 
+    if (channelEndpointHttps != NULL) {
+        httpEndpointLen = (UINT32) STRLEN(channelEndpointHttps);
+    }
+
+    if (channelEndpointWss != NULL) {
+        wssEndpointLen = (UINT32) STRLEN(channelEndpointWss);
+    }
+
     // If tags count is not zero then pTags shouldn't be NULL
     CHK_STATUS(validateTags(tagCount, pTags));
 
@@ -106,6 +116,8 @@ STATUS createChannelInfo(PCHAR pChannelName,
                 ALIGN_UP_TO_MACHINE_WORD(1 + agentLen) +
                 ALIGN_UP_TO_MACHINE_WORD(1 + userAgentLen) +
                 ALIGN_UP_TO_MACHINE_WORD(1 + kmsLen) +
+                ALIGN_UP_TO_MACHINE_WORD(1 + httpEndpointLen) +
+                ALIGN_UP_TO_MACHINE_WORD(1 + wssEndpointLen) +
                 tagsSize;
     CHK(NULL != (pChannelInfo = (PChannelInfo) MEMCALLOC(1, allocSize)), STATUS_NOT_ENOUGH_MEMORY);
 
@@ -183,6 +195,18 @@ STATUS createChannelInfo(PCHAR pChannelName,
         STRCPY(pCurPtr, pCustomUserAgent);
         pChannelInfo->pKmsKeyId = pCurPtr;
         pCurPtr += ALIGN_UP_TO_MACHINE_WORD(kmsLen + 1);
+    }
+
+    if (httpEndpointLen != 0) {
+        STRCPY(pCurPtr, channelEndpointHttps);
+        pChannelInfo->channelEndpointHttps = pCurPtr;
+        pCurPtr += ALIGN_UP_TO_MACHINE_WORD(httpEndpointLen + 1);
+    }
+
+    if (wssEndpointLen != 0) {
+        STRCPY(pCurPtr, channelEndpointWss);
+        pChannelInfo->channelEndpointWss = pCurPtr;
+        pCurPtr += ALIGN_UP_TO_MACHINE_WORD(wssEndpointLen + 1);
     }
 
     // Process tags

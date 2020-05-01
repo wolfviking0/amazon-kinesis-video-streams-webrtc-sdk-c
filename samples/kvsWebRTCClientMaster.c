@@ -25,6 +25,14 @@ INT32 main(INT32 argc, CHAR *argv[])
         goto CleanUp;
     }
 
+    // export AWS_KVS_LOG_LEVEL=1 and then run kvsWebrtcClientMaster to see your endpoints
+    // they will be like
+    // https://r-13e2a5fc.kinesisvideo.us-east-1.amazonaws.com
+    // wss://m-53faec82.kinesisvideo.us-east-1.amazonaws.com
+    // Note you cant reuse viewer's endpoint for master.
+    pSampleConfiguration->channelInfo.channelEndpointHttps = (PCHAR) "";
+    pSampleConfiguration->channelInfo.channelEndpointWss = (PCHAR) "";
+
     printf("[KVS Master] Created signaling channel %s\n", (argc > 1 ? argv[1] : SAMPLE_CHANNEL_NAME));
 
     // Set the audio and video handlers

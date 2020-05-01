@@ -629,6 +629,9 @@ STATUS createSampleConfiguration(PCHAR channelName, SIGNALING_CHANNEL_ROLE_TYPE 
     pSampleConfiguration->trickleIce = trickleIce;
     pSampleConfiguration->useTurn = useTurn;
 
+    // put your channel arn here
+    pSampleConfiguration->channelInfo.pChannelArn = (PCHAR) "";
+
     pSampleConfiguration->channelInfo.version = CHANNEL_INFO_CURRENT_VERSION;
     pSampleConfiguration->channelInfo.pChannelName = channelName;
     pSampleConfiguration->channelInfo.pKmsKeyId = NULL;

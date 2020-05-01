@@ -1074,6 +1074,13 @@ typedef struct {
     UINT32 tagCount; //!< Number of tags associated with the stream
 
     PTag pTags; //!< Stream tags array
+
+    // Signaling endpoint
+    PCHAR channelEndpointWss;
+
+    // Signaling endpoint
+    PCHAR channelEndpointHttps;
+
 } ChannelInfo, *PChannelInfo;
 
 /**

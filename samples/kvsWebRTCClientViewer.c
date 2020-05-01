@@ -26,6 +26,14 @@ INT32 main(INT32 argc, CHAR *argv[])
         printf("[KVS Viewer] createSampleConfiguration(): operation returned status code: 0x%08x \n", retStatus);
         goto CleanUp;
     }
+
+    // export AWS_KVS_LOG_LEVEL=1 and then run kvsWebrtcClientViewer to see your endpoints
+    // they will be like
+    // https://r-13e2a5fc.kinesisvideo.us-east-1.amazonaws.com
+    // wss://m-53faec82.kinesisvideo.us-east-1.amazonaws.com
+    // Note you cant reuse master's endpoint for viewer.
+    pSampleConfiguration->channelInfo.channelEndpointHttps = (PCHAR) "";
+    pSampleConfiguration->channelInfo.channelEndpointWss = (PCHAR) "";
     gSampleConfiguration = pSampleConfiguration;
 
     printf("[KVS Viewer] Created signaling channel %s\n", (argc > 1 ? argv[1] : SAMPLE_CHANNEL_NAME));
