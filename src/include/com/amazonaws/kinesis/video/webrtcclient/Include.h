@@ -17,6 +17,7 @@ extern "C" {
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #include <com/amazonaws/kinesis/video/client/Include.h>
 #include <com/amazonaws/kinesis/video/common/Include.h>
+#include <com/amazonaws/kinesis/video/webrtcclient/Stats.h>
 #pragma clang diagnostic pop
 
 /*===========================================================================================*/
@@ -1235,6 +1236,46 @@ typedef struct {
                      //!< RTCDataChannel object with the same id as the other peer.
 } RtcDataChannelInit, *PRtcDataChannelInit;
 
+
+/////////////////////////////////////////////////////
+/// Metrics/Stats Related structures
+/////////////////////////////////////////////////////
+
+/**
+ * @brief Collection of ICE related stats
+ */
+typedef struct {
+    PRTCIceServerStats pIceServerStats; //!< Server related stats. Reference in Stats.h
+    PRTCIceCandidateStats pIceCandidateStats; //!< Single candidate stats. Reference in Stats.h
+    PRTCIceCandidatePairStats pIceCandidatePairStats; //!< Candidate pair stats. Reference in Stats.h
+} IceStats, *PIceStats;
+
+/**
+ * @brief Collection of RTP stream related stats
+ */
+typedef struct {
+    PRTCRemoteInboundRtpStreamStats pInboundStats; //!< Inbound RTP Stats. Reference in Stats.h
+    PRTCOutboundRtpStreamStats pOutboundStats; //!< Outbound RTP Stats. Reference in Stats.h
+    PRTCTransportStats pTransportStats; //!< Transport stats. Reference in Stats.h
+} StreamStats, *PStreamStats;
+
+/**
+ * @brief SignalingStats Collection of signaling related stats. Can be expanded in the future
+ */
+typedef struct {
+    SignalingClientStats signalingClientMetrics; //!< Signaling client metrics stats. Reference in Stats.h
+} SignalingStats, *PSignalingStats;
+
+/**
+ * @brief The stats object is populated based on RTCStatsType request
+ *
+ */
+typedef struct {
+    UINT64 timestamp; //!< Timestamp of request for stats
+    RTC_STATS_TYPE requestedTypeOfStats; //!< Type of stats requested. Set to RTC_ALL to get all supported stats
+    RTCStatsObject rtcStatsObject; //!< Object that is populated by the SDK on request
+} RTCStats, *PRTCStats;
+
 ////////////////////////////////////////////////////
 // Public functions
 ////////////////////////////////////////////////////
@@ -1636,7 +1677,7 @@ PUBLIC_API STATUS signalingClientConnectSync(SIGNALING_CLIENT_HANDLE);
  */
 PUBLIC_API STATUS signalingClientDisconnectSync(SIGNALING_CLIENT_HANDLE);
 
-/*
+/**
  * @brief Gets the Signaling client current state.
  *
  * @param[in] SIGNALING_CLIENT_HANDLE Signaling client handle
@@ -1646,7 +1687,7 @@ PUBLIC_API STATUS signalingClientDisconnectSync(SIGNALING_CLIENT_HANDLE);
  */
 PUBLIC_API STATUS signalingClientGetCurrentState(SIGNALING_CLIENT_HANDLE, PSIGNALING_CLIENT_STATE);
 
-/*
+/**
  * Gets a literal string representing a Signaling client state.
  *
  * @param[in] SIGNALING_CLIENT_HANDLE Signaling client handle
@@ -1673,6 +1714,23 @@ PUBLIC_API STATUS signalingClientGetStateString(SIGNALING_CLIENT_STATE, PCHAR*);
  * @return STATUS code of the execution. STATUS_SUCCESS on success
  */
 PUBLIC_API STATUS signalingClientDeleteSync(SIGNALING_CLIENT_HANDLE);
+
+/**
+ * @brief Get the relevant/all metrics based on the RTCStatsType field. This does not include
+ * any signaling related metrics
+ *
+ * @param PRtcPeerConnection Peer connection for which the stats need to be collected
+ * @param[in/out] PRtcStats The stats object with the RTCStatsType field populated
+ */
+PUBLIC_API STATUS getStats(PRtcPeerConnection, PRTCStats);
+
+/**
+ * @brief Get signaling related metrics
+ *
+ * @param[in] SIGNALING_CLIENT_HANDLE Signaling client handle
+ * @param[in/out] PSignalingStats Signaling stats
+ */
+PUBLIC_API STATUS getSignalingStats(SIGNALING_CLIENT_HANDLE, PSignalingStats);
 
 #ifdef  __cplusplus
 }

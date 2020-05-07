@@ -243,6 +243,7 @@ typedef struct {
     UINT64 getIceConfigTime;
     UINT64 deleteTime;
     UINT64 connectTime;
+    PSignalingStats pSignalingStats;
 } SignalingClient, *PSignalingClient;
 
 // Public handle to and from object converters

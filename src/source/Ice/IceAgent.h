@@ -200,6 +200,9 @@ struct __IceAgent {
 
     // store transaction ids for stun binding request.
     PTransactionIdStore pStunBindingRequestTransactionIdStore;
+
+    // Add ICE related Stats
+    PIceStats pIceStats;
 };
 
 

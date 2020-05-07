@@ -89,6 +89,8 @@ typedef struct {
     RTC_PEER_CONNECTION_STATE previousConnectionState;
 
     UINT16 MTU;
+    // Get RTP Stream Stats
+    PStreamStats pStreamStats;
 } KvsPeerConnection, *PKvsPeerConnection;
 
 typedef struct {
