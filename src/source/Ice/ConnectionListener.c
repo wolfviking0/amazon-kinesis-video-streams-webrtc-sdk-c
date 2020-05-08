@@ -46,8 +46,6 @@ STATUS freeConnectionListener(PConnectionListener* ppConnectionListener)
 {
     STATUS retStatus = STATUS_SUCCESS;
     PConnectionListener pConnectionListener = NULL;
-    PDoubleListNode pCurNode = NULL;
-    PSocketConnection pSocketConnection = NULL;
 
     CHK(ppConnectionListener != NULL, STATUS_NULL_ARG);
     CHK(*ppConnectionListener != NULL, retStatus);
@@ -66,12 +64,6 @@ STATUS freeConnectionListener(PConnectionListener* ppConnectionListener)
     }
 
     if (pConnectionListener->connectionList != NULL) {
-        CHK_LOG_ERR(doubleListGetHeadNode(pConnectionListener->connectionList, &pCurNode));
-        while(pCurNode != NULL) {
-            pSocketConnection = (PSocketConnection) pCurNode->data;
-            pCurNode = pCurNode->pNext;
-            CHK_STATUS(freeSocketConnection(&pSocketConnection));
-        }
         CHK_LOG_ERR(doubleListClear(pConnectionListener->connectionList, FALSE));
         CHK_LOG_ERR(doubleListFree(pConnectionListener->connectionList));
     }
@@ -265,7 +257,6 @@ PVOID connectionListenerReceiveDataRoutine(PVOID arg)
                     pNodeToDelete = pCurNode;
                     pCurNode = pCurNode->pNext;
 
-                    CHK_STATUS(freeSocketConnection(&pSocketConnection));
                     CHK_STATUS(doubleListDeleteNode(pConnectionListener->connectionList, pNodeToDelete));
                 } else {
                     pCurNode = pCurNode->pNext;

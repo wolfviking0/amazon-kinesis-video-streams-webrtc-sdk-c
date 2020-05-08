@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 #define MAX_UDP_PACKET_SIZE                                         65507
-#define SOCKET_WAIT_FOR_DATA_TIMEOUT_SECONDS                        2
+#define SOCKET_WAIT_FOR_DATA_TIMEOUT_SECONDS                        1
 #define CONNECTION_LISTENER_DEFAULT_MAX_LISTENING_CONNECTION        64
 
 typedef struct {
