@@ -174,7 +174,7 @@ STATUS sctpSessionWriteMessage(PSctpSession pSctpSession, UINT32 streamId, BOOL 
     MEMSET(&spa, 0x00, SIZEOF(struct sctp_sendv_spa));
     spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
     spa.sendv_sndinfo.snd_sid = streamId;
-
+    printf("pSctpSession data:%d\n", pSctpSession->spa.sendv_prinfo.pr_policy);
     putInt32((PINT32) &spa.sendv_sndinfo.snd_ppid, isBinary ? SCTP_PPID_BINARY : SCTP_PPID_STRING);
     CHK(usrsctp_sendv(pSctpSession->socket, pMessage, pMessageLen, NULL, 0, &spa, SIZEOF(spa), SCTP_SENDV_SPA, 0) > 0, STATUS_INTERNAL_ERROR);
 
@@ -205,7 +205,6 @@ STATUS sctpSessionWriteDcep(PSctpSession pSctpSession, UINT32 streamId, PCHAR pC
 {
      ENTERS();
      STATUS retStatus = STATUS_SUCCESS;
-     struct sctp_sendv_spa spa;
      PBYTE pPacket = NULL;
      UINT32 pPacketSize = SCTP_DCEP_HEADER_LENGTH + pChannelNameLen;
 
@@ -232,21 +231,29 @@ STATUS sctpSessionWriteDcep(PSctpSession pSctpSession, UINT32 streamId, PCHAR pC
         if(pRtcDataChannelInit->maxRetransmits > 0) {
             pPacket[1] = DCEP_DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT;
             putUnalignedInt16BigEndian(pPacket + 6, pRtcDataChannelInit->maxRetransmits);
+            pSctpSession->spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+            pSctpSession->spa.sendv_prinfo.pr_value = pRtcDataChannelInit->maxRetransmits;
         }
         else if(pRtcDataChannelInit->maxPacketLifeTime > 0) {
             pPacket[1] = DCEP_DATA_CHANNEL_PARTIAL_RELIABLE_TIMED;
             putUnalignedInt16BigEndian(pPacket + 6, pRtcDataChannelInit->maxPacketLifeTime);
-         }
+            pSctpSession->spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+            pSctpSession->spa.sendv_prinfo.pr_value = pRtcDataChannelInit->maxPacketLifeTime;
+        }
      }
      else {
-         spa.sendv_sndinfo.snd_flags = SCTP_UNORDERED;
+    	 pSctpSession->spa.sendv_sndinfo.snd_flags = SCTP_UNORDERED;
          if(pRtcDataChannelInit->maxRetransmits > 0) {
              pPacket[1] = DCEP_DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED;
              putUnalignedInt16BigEndian(pPacket + 6, pRtcDataChannelInit->maxRetransmits);
+             pSctpSession->spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_RTX;
+             pSctpSession->spa.sendv_prinfo.pr_value = pRtcDataChannelInit->maxRetransmits;
          }
          else if(pRtcDataChannelInit->maxPacketLifeTime > 0) {
              pPacket[1] = DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED;
              putUnalignedInt16BigEndian(pPacket + 6, pRtcDataChannelInit->maxPacketLifeTime);
+             pSctpSession->spa.sendv_prinfo.pr_policy = SCTP_PR_SCTP_TTL;
+             pSctpSession->spa.sendv_prinfo.pr_value = pRtcDataChannelInit->maxPacketLifeTime;
          }
          else {
              pPacket[1] = DCEP_DATA_CHANNEL_RELIABLE_UNORDERED;
@@ -256,12 +263,12 @@ STATUS sctpSessionWriteDcep(PSctpSession pSctpSession, UINT32 streamId, PCHAR pC
      DLOGD("PARTIAL RELIABILITY PARAMS: 0x%02x [CHANNEL_TYPE] 0x%02x%02x%02x%02x [PARAMETER]", pPacket[1], pPacket[4], pPacket[5], pPacket[6], pPacket[7]);
      putUnalignedInt16BigEndian(pPacket + SCTP_DCEP_LABEL_LEN_OFFSET, pChannelNameLen);
      MEMCPY(pPacket + SCTP_DCEP_LABEL_OFFSET, pChannelName, pChannelNameLen);
-     MEMSET(&spa, 0x00, SIZEOF(struct sctp_sendv_spa));
-     spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
-     spa.sendv_sndinfo.snd_sid = streamId;
+     // MEMSET(&spa, 0x00, SIZEOF(struct sctp_sendv_spa));
+     pSctpSession->spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
+     pSctpSession->spa.sendv_sndinfo.snd_sid = streamId;
 
-     putInt32((PINT32) &spa.sendv_sndinfo.snd_ppid, SCTP_PPID_DCEP);
-     CHK(usrsctp_sendv(pSctpSession->socket, pPacket, pPacketSize, NULL, 0, &spa, SIZEOF(spa), SCTP_SENDV_SPA, 0) > 0, STATUS_INTERNAL_ERROR);
+     putInt32((PINT32) &pSctpSession->spa.sendv_sndinfo.snd_ppid, SCTP_PPID_DCEP);
+//     CHK(usrsctp_sendv(pSctpSession->socket, pPacket, pPacketSize, NULL, 0, &spa, SIZEOF(spa), SCTP_SENDV_SPA, 0) > 0, STATUS_INTERNAL_ERROR);
 
 CleanUp:
     SAFE_MEMFREE(pPacket);
@@ -310,7 +317,8 @@ STATUS handleDcepPacket(PSctpSession pSctpSession, UINT32 streamId, PBYTE data, 
 
     // Assert that is DCEP of type DataChannelOpen
     CHK(length > SCTP_DCEP_HEADER_LENGTH && data[0] == DCEP_DATA_CHANNEL_OPEN, STATUS_SUCCESS);
-
+    printf("SCTP type:%d\n", data[1]);
+    printf("Value:%02x%02x%02x%02x", data[4], data[5], data[6], data[7]);
     MEMCPY(&labelLength, data + 8, SIZEOF(UINT16));
     putInt16((PINT16) &labelLength, labelLength);
 

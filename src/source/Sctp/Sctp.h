@@ -68,6 +68,7 @@ typedef struct {
 typedef struct {
     volatile SIZE_T shutdownStatus;
     struct socket *socket;
+    struct sctp_sendv_spa spa;
     SctpSessionCallbacks sctpSessionCallbacks;
 } SctpSession, *PSctpSession;
 

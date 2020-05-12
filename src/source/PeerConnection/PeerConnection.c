@@ -89,7 +89,7 @@ STATUS allocateSctp(PKvsPeerConnection pKvsPeerConnection)
         CHK_STATUS(hashTableGet(pKvsPeerConnection->pDataChannels, currentDataChannelId, (PUINT64) &pKvsDataChannel));
         CHK(pKvsDataChannel != NULL, STATUS_INTERNAL_ERROR);
         sctpSessionWriteDcep(pKvsPeerConnection->pSctpSession, currentDataChannelId, pKvsDataChannel->dataChannel.name, STRLEN(pKvsDataChannel->dataChannel.name), &pKvsDataChannel->rtcDataChannelInit);
-
+        printf("%d\n", pKvsPeerConnection->pSctpSession->spa.sendv_prinfo.pr_policy);
         if (pKvsDataChannel->onOpen != NULL) {
             pKvsDataChannel->onOpen(pKvsDataChannel->onOpenCustomData);
         }
@@ -105,7 +105,6 @@ VOID onInboundPacket(UINT64 customData, PBYTE buff, UINT32 buffLen)
     PKvsPeerConnection pKvsPeerConnection = (PKvsPeerConnection) customData;
     BOOL isDtlsConnected = FALSE;
     INT32 signedBuffLen = buffLen;
-
     CHK(signedBuffLen > 2 && pKvsPeerConnection != NULL, STATUS_SUCCESS);
 
     /*
@@ -134,6 +133,7 @@ VOID onInboundPacket(UINT64 customData, PBYTE buff, UINT32 buffLen)
 
             if (pKvsPeerConnection->pSctpSession == NULL) {
                 CHK_STATUS(allocateSctp(pKvsPeerConnection));
+                printf("In inbound packet\n");
             }
         }
 

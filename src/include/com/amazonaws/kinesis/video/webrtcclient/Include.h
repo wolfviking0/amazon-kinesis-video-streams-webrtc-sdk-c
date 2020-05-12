@@ -1216,6 +1216,14 @@ typedef struct {
  */
 typedef struct __RtcDataChannel {
     CHAR name[MAX_DATA_CHANNEL_NAME_LEN + 1]; //!< Define name of data channel. Max length is 256 characters
+    BOOL ordered; //!< Decides the order in which data is sent. If true, data is sent in order
+    UINT16 maxPacketLifeTime; //!< Limits the time (in milliseconds) during which the channel will (re)transmit
+                              //!< data if not acknowledged. This value may be clamped if it exceeds the maximum
+                              //!< value supported by the user agent.
+    UINT16 maxRetransmits;    //!< Control number of times a channel retransmits data if not delivered successfully
+    CHAR protocol[MAX_DATA_CHANNEL_PROTOCOL_LEN + 1]; //!< Sub protocol name for the channel
+    BOOL negotiated; //!< If set to true, it is up to the application to negotiate the channel and create an
+                     //!< RTCDataChannel object with the same id as the other peer.
 } RtcDataChannel, *PRtcDataChannel;
 
 /**
